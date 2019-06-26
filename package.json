@@ -1,0 +1,16 @@
+{
+  "name": "twitterbot",
+  "version": "0.1.0",
+  "description": "twitter bot to make parapara related tweets",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "twitter",
+    "parapara",
+    "eurobeat"
+  ],
+  "author": "Henrique Barreto",
+  "license": "ISC"
+}
