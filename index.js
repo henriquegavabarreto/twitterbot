@@ -18,7 +18,7 @@ const youtube = new YouTube(process.env.YOUTUBE_API_KEY)
 
 console.log('Starting ParaPara News')
 
-let ytRegExp = /(parapara|eurobeat|techpara|テクパラ|パラパラ|ユーロ|テクノ|ユーロビート)/gi
+let ytRegExp = /(parapara|eurobeat|techpara|trapara|trance|テクパラ|パラパラ|ユーロ|テクノ|ユーロビート|トラパラ|トランス)/gi
 
 function validateVideo (title, description) {
   return (ytRegExp.test(title) || ytRegExp.test(description))
@@ -26,20 +26,26 @@ function validateVideo (title, description) {
 
 let doc = new GoogleSpreadsheet('14qlEWwnIoq1aFup3gJqgju1CKMUr35h-3tH_GxcYSzU')
 
-promisify(doc.useServiceAccountAuth)(creds).then(() => {
-  promisify(doc.getInfo)().then((info)=> {
-    let channels = info.worksheets[0]
-    promisify(channels.getRows)({ offset: 1 }).then(rows => {
-      rows.forEach(row => {
-        getNewVideos(row.channelid, row.channelname).then(videoInfo => {
-          console.log(videoInfo)
-        }).catch(err => console.log(err))
-      })
-    }).catch(err => console.log(err))
-  }).catch(err => console.log(err))
-}).catch(err => console.log(err))
+// returns the first worksheet to get the channels id and names to check for new videos
+// promisify(doc.useServiceAccountAuth)(creds).then(() => {
+//   promisify(doc.getInfo)().then((info)=> {
+//     let channels = info.worksheets[0]
+//     promisify(channels.getRows)({ offset: 1 }).then(rows => {
+//       rows.forEach(row => {
+//         getNewVideos(row.channelid).then(videoInfo => {
+//           console.log(videoInfo)
+//         }).catch(err => console.log(err))
+//       })
+//     }).catch(err => console.log(err))
+//   }).catch(err => console.log(err))
+// }).catch(err => console.log(err))
 
-function getNewVideos (channelId, channelName) {
+// getNewVideos('UCXaoVsdBCWOrj9-n4tOLVNg', 'gradius').then(res => {
+//   console.log('new video available')
+//   console.log(res)
+// })
+
+function getNewVideos (channelId) {
   return new Promise(function(resolve, reject) {
     youtube.getChannelByID(channelId, { part: 'contentDetails' }).then(channel => {
       let yesterday = new Date()
@@ -56,12 +62,12 @@ function getNewVideos (channelId, channelName) {
                     let videoInfo = {
                       id: video.id,
                       title: video.title,
-                      description: video.description
+                      channelName: video.channel.title
                     }
                     resolve(videoInfo)
                   }
                 } else {
-                  reject(`no new videos in ${channelName}`)
+                  reject(`no new videos today`)
                 }
               }
             }).catch(error => reject(error))
@@ -76,7 +82,68 @@ function getNewVideos (channelId, channelName) {
   })
 }
 
+// returns a random channel from the spreadsheet
+function getRandomChannel () {
+  return promisify(doc.useServiceAccountAuth)(creds).then(() => {
+    return promisify(doc.getInfo)().then((info)=> {
+      let channels = info.worksheets[0]
+      return promisify(channels.getRows)({ offset: 1 }).then(rows => {
+        let randomNumber = getRandomNumber(rows.length)
+        return rows[randomNumber].channelid
+      }).catch(err => console.log(err))
+    }).catch(err => console.log(err))
+  }).catch(err => console.log(err))
+}
 
+// returns a random video id and title
+function getRandomVideo (channelId) {
+  return new Promise(function(resolve, reject) {
+    youtube.getChannelByID(channelId, { part: 'contentDetails' }).then(channel => {
+      if (channel) {
+       // get channel uploads
+        youtube.getPlaylistByID(channel.relatedPlaylists.uploads).then(playlist => {
+          if (playlist) {
+            // get all videos of the channel
+            playlist.getVideos(undefined, { part: 'snippet' }).then(videos => {
+              let selectedVideo = selectVideo(videos, getRandomNumber(videos.length))
+              let info = {
+                id: selectedVideo.id,
+                videoTitle: selectedVideo.title,
+                channelTitle: selectedVideo.channel.title
+              }
+              resolve(info)
+            }).catch(error => reject(error))
+          } else {
+            reject('playlist not found :(')
+          }
+        }).catch(error => reject(error));
+     } else {
+        reject('channel not found :(')
+      }
+    }).catch(error => reject(error))
+  })
+}
+
+// returns a valid video
+function selectVideo (videos, randomNumber) {
+  if(validateVideo(videos[randomNumber].title, videos[randomNumber].description)) {
+    return videos[randomNumber]
+  } else {
+    videos.splice(randomNumber, 1)
+    return selectVideo(videos, getRandomNumber(videos.length))
+  }
+}
+
+// returns a random number
+function getRandomNumber (max) {
+  return Math.floor(Math.random() * max)
+}
+
+getRandomChannel().then(channelId => {
+  getRandomVideo(channelId).then(videoInfo => {
+    console.log(videoInfo)
+  }).catch(err => console.log(err))
+}).catch(err => console.log(err))
 
 // T.get('search/tweets', { q: 'sefdeluxe since:2011-07-11', count: 2 }, function(err, data, response) {
 //   console.log(data)
