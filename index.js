@@ -64,7 +64,6 @@ getCurrentActiveChannels().then(rows => {
   }).catch(err => console.log(err))
 })
 
-// KNOWN ISSUE: This returns unavailable videos too => Videos that were taken out because of copyright issues
 function getNewVideosFromChannel (channelId) {
   return new Promise(function(resolve, reject) {
     youtube.getChannelByID(channelId, { part: 'contentDetails' }).then(channel => {
@@ -77,19 +76,27 @@ function getNewVideosFromChannel (channelId) {
             // get latest 2 videos of the channel
             playlist.getVideos(1, { part: 'snippet' }).then(video => {
               // resolve with video info if there is any
-              if (new Date(video[0].publishedAt) >= yesterday) {
-                if (validateVideo(video[0].title, video[0].description)) {
-                  let videoInfo = {
-                    id: video[0].id,
-                    title: video[0].title,
-                    channelName: video[0].channel.title
+              video[0].fetch({ part: 'status' }).then(video => {
+                if (video.raw.status.publicStatsViewable) {
+                  if (new Date(video.publishedAt) >= yesterday) {
+                    if (validateVideo(video.title, video.description)) {
+                      let videoInfo = {
+                        id: video.id,
+                        title: video.title,
+                        channelName: video.channel.title
+                      }
+                      resolve(videoInfo)
+                    } else {
+                      resolve(false)
+                    }
+                  } else {
+                    // resolve with false
+                    resolve(false)
                   }
-                  resolve(videoInfo)
+                } else {
+                  resolve(false)
                 }
-              } else {
-                // resolve with false
-                resolve(false)
-              }
+              })
             }).catch(error => reject(error))
           } else {
             reject('playlist not found :(')

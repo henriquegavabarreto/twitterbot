@@ -31,7 +31,7 @@ function getActiveChannels () {
           promisify(allChannels.getRows)({ offset: 1 }).then(rows => {
             rows.forEach(row => {
               checkActivity(row.channelid).then(channelInfo => {
-                console.log(`Adding ${channelInfo.title} to the list`)
+                console.log(`Adding ${channelInfo.channelname} to the list`)
                 // add channel to the document if active
                 promisify(activeChannels.addRow)(channelInfo)
               }).catch(err => console.log(err))
@@ -57,20 +57,20 @@ function checkActivity (channelId) {
               let active = false
               let channelInfo = {}
               for(video of videos) {
+                channelInfo = {
+                  channelname: video.channel.title,
+                  channelid: video.channel.id
+                }
                 if (new Date(video.publishedAt) > lastYear) {
                   if (validateVideo(video.title, video.description)) {
                     active = true
-                    channelInfo = {
-                      channelname: video.channel.title,
-                      channelid: video.channel.id
-                    }
                   }
                 }
               }
               if (active) {
                 resolve(channelInfo)
               } else {
-                reject(`${channelInfo.channelname} has no relevant videos since last year`)
+                reject(`${channelInfo.channelname} has no relevant videos for more than year`)
               }
             }).catch(error => reject(error))
           } else {
