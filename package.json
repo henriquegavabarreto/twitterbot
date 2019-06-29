@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "standard && node index.js"
   },
   "keywords": [
     "twitter",
@@ -17,7 +17,11 @@
   "dependencies": {
     "dotenv": "^8.0.0",
     "google-spreadsheet": "^2.0.7",
+    "node-schedule": "^1.3.2",
     "simple-youtube-api": "^5.2.0",
     "twit": "^2.2.11"
+  },
+  "devDependencies": {
+    "standard": "^12.0.1"
   }
 }
