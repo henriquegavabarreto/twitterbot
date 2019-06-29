@@ -26,26 +26,46 @@ function validateVideo (title, description) {
 
 let doc = new GoogleSpreadsheet('14qlEWwnIoq1aFup3gJqgju1CKMUr35h-3tH_GxcYSzU')
 
-// returns the first worksheet to get the channels id and names to check for new videos
-// promisify(doc.useServiceAccountAuth)(creds).then(() => {
-//   promisify(doc.getInfo)().then((info)=> {
-//     let channels = info.worksheets[0]
-//     promisify(channels.getRows)({ offset: 1 }).then(rows => {
-//       rows.forEach(row => {
-//         getNewVideos(row.channelid).then(videoInfo => {
-//           console.log(videoInfo)
-//         }).catch(err => console.log(err))
-//       })
-//     }).catch(err => console.log(err))
-//   }).catch(err => console.log(err))
-// }).catch(err => console.log(err))
+// returns a promise with the rows of the active channels spreadsheet
+function getCurrentActiveChannels() {
+  return promisify(doc.useServiceAccountAuth)(creds).then(() => {
+    return promisify(doc.getInfo)().then((info)=> {
+      let activeChannels = info.worksheets[1]
+      return promisify(activeChannels.getRows)({ offset: 1 }).then(rows => {
+        return Promise.resolve(rows)
+      }).catch(err => console.log(err))
+    }).catch(err => console.log(err))
+  }).catch(err => console.log(err))
+}
 
-// getNewVideos('UCXaoVsdBCWOrj9-n4tOLVNg', 'gradius').then(res => {
-//   console.log('new video available')
-//   console.log(res)
-// })
+getCurrentActiveChannels().then(rows => {
+  let promiseArray = []
+  rows.forEach(row => {
+    promiseArray.push(getNewVideosFromChannel(row.channelid))
+  })
+  Promise.all(promiseArray).then(response => {
+    let newVideos = []
+    // ignore non video responses
+    response.forEach(video => {
+      if (video) {
+        newVideos.push(video)
+      }
+    })
+    if (newVideos.length > 0) {
+      console.log(`We got ${newVideos.length} new videos since yesterday!`)
+      newVideos.forEach(video => {
+        // deal with new videos information
+        console.log(`${video.channelName} uploaded ${video.title}!\nCheck it out on youtube!\nhttps://youtu.be/${video.id}`)
+      })
+    } else {
+      // deal with having no videos
+      console.log('No New Videos Today')
+    }
+  }).catch(err => console.log(err))
+})
 
-function getNewVideos (channelId) {
+// KNOWN ISSUE: This returns unavailable videos too => Videos that were taken out because of copyright issues
+function getNewVideosFromChannel (channelId) {
   return new Promise(function(resolve, reject) {
     youtube.getChannelByID(channelId, { part: 'contentDetails' }).then(channel => {
       let yesterday = new Date()
@@ -54,21 +74,21 @@ function getNewVideos (channelId) {
        // get channel uploads
         youtube.getPlaylistByID(channel.relatedPlaylists.uploads).then(playlist => {
           if (playlist) {
-            // get 5 first videos of the channel
-            playlist.getVideos(5).then(videos => {
-              for(video of videos) {
-                if (new Date(video.publishedAt) > yesterday) {
-                  if (validateVideo(video.title, video.description)) {
-                    let videoInfo = {
-                      id: video.id,
-                      title: video.title,
-                      channelName: video.channel.title
-                    }
-                    resolve(videoInfo)
+            // get latest 2 videos of the channel
+            playlist.getVideos(1, { part: 'snippet' }).then(video => {
+              // resolve with video info if there is any
+              if (new Date(video[0].publishedAt) >= yesterday) {
+                if (validateVideo(video[0].title, video[0].description)) {
+                  let videoInfo = {
+                    id: video[0].id,
+                    title: video[0].title,
+                    channelName: video[0].channel.title
                   }
-                } else {
-                  reject(`no new videos today`)
+                  resolve(videoInfo)
                 }
+              } else {
+                // resolve with false
+                resolve(false)
               }
             }).catch(error => reject(error))
           } else {
@@ -139,11 +159,16 @@ function getRandomNumber (max) {
   return Math.floor(Math.random() * max)
 }
 
-getRandomChannel().then(channelId => {
-  getRandomVideo(channelId).then(videoInfo => {
-    console.log(videoInfo)
+function getRandomVideoInfo () {
+  return getRandomChannel().then(channelId => {
+    return getRandomVideo(channelId).then(videoInfo => {
+      console.log(videoInfo)
+    }).catch(err => console.log(err))
   }).catch(err => console.log(err))
-}).catch(err => console.log(err))
+}
+
+// getRandomVideoInfo()
+// setInterval(getRandomVideoInfo, 20000)
 
 // T.get('search/tweets', { q: 'sefdeluxe since:2011-07-11', count: 2 }, function(err, data, response) {
 //   console.log(data)
