@@ -126,11 +126,7 @@ function getAllNewVideos () {
       })
       if (newVideos.length > 0) {
         console.log(`We got ${newVideos.length} new videos in the last 24 hours!`)
-        newVideos.forEach(video => {
-          // deal with new videos information
-          console.log(`${video.channelName} uploaded ${video.title}!\nCheck it out on youtube!\nhttps://youtu.be/${video.id}`)
-        })
-        return newVideos
+        return Promise.resolve(newVideos)
       } else {
         // deal with having no videos
         console.log('No New Videos Today')
@@ -151,27 +147,21 @@ function getNewVideosFromChannel (channelId) {
             // get latest 2 videos of the channel
             playlist.getVideos(1, { part: 'snippet' }).then(video => {
               // resolve with video info if there is any
-              video[0].fetch({ part: 'status' }).then(video => {
-                if (video.raw.status.publicStatsViewable) {
-                  if (new Date(video.publishedAt) >= yesterday) {
-                    if (validateVideo(video.title, video.description)) {
-                      let videoInfo = {
-                        videoId: video.id,
-                        videoTitle: video.title,
-                        channelName: video.channel.title
-                      }
-                      resolve(videoInfo)
-                    } else {
-                      resolve(false)
-                    }
-                  } else {
-                    // resolve with false
-                    resolve(false)
+              if (new Date(video[0].publishedAt) >= yesterday) {
+                if (validateVideo(video[0].title, video[0].description)) {
+                  let videoInfo = {
+                    videoId: video[0].id,
+                    videoTitle: video[0].title,
+                    channelName: video[0].channel.title
                   }
+                  resolve(videoInfo)
                 } else {
                   resolve(false)
                 }
-              })
+              } else {
+                // resolve with false
+                resolve(false)
+              }
             }).catch(error => reject(error))
           } else {
             reject(new Error('Playlist not found'))
@@ -186,9 +176,9 @@ function getNewVideosFromChannel (channelId) {
 
 // returns a random channel from the spreadsheet
 function getRandomChannel () {
-  getSpreadsheet(0).then(rows => {
+  return getSpreadsheet(0).then(rows => {
     let randomNumber = getRandomNumber(rows.length)
-    return rows[randomNumber].channelid
+    return Promise.resolve(rows[randomNumber].channelid)
   }).catch(err => console.log(err))
 }
 
@@ -258,14 +248,17 @@ function tweetRandomVideo () {
 function tweetNewVideos () {
   getAllNewVideos().then(videos => {
     if (videos.length === 0) {
+      console.log('tweet random')
       tweetRandomVideo()
     } else if (videos.length === 1) {
-      tweetMsg(`This a video posted on the last 24h from ${videos[0].channelName}!\n\n${videos[0].videoTitle}\n\nhttps://youtu.be/${videos[0].videoId}\n\n#parapara #パラパラ`)
+      console.log('tweeting one video')
+      tweetMsg(`This is a video posted on the last 24h from ${videos[0].channelName}!\n\n${videos[0].videoTitle}\n\nhttps://youtu.be/${videos[0].videoId}\n\n#parapara #パラパラ`)
     } else {
       let timeOut = 1000 * 60 * 60 * 12 / (videos.length - 1)
+      console.log('tweeting ' + videos.length + ' videos')
       // post new videos in the next 12 hours
       videos.forEach((video, index) => {
-        setTimeout((video) => {
+        setTimeout(() => {
           tweetMsg(`[${index + 1}/${videos.length}]\n\nThis one of the videos posted on the last 24h! From ${video.channelName}!\n\n${video.videoTitle}\n\nhttps://youtu.be/${video.videoId}\n\n#parapara #パラパラ`)
         }, index * timeOut)
       })
@@ -274,10 +267,10 @@ function tweetNewVideos () {
 }
 
 // tweet a random video every day at 9pm
-var j1 = schedule.scheduleJob('0 21 * * *', tweetRandomVideo)
+schedule.scheduleJob('0 21 * * *', tweetRandomVideo)
 
-var j2 = schedule.scheduleJob('0 0 1 * *', setActiveChannels)
+schedule.scheduleJob('0 0 1 * *', setActiveChannels)
 
-var j3 = schedule.scheduleJob('0 8 * * *', tweetNewVideos)
+schedule.scheduleJob('0 08 * * *', tweetNewVideos)
 
 // TODO: retweet every tweet that has parapara and youtu.be, but ignoring users with 'parapara' - maybe check if it is cool before retweeting (?)
