@@ -5,6 +5,8 @@ const { promisify } = require('util')
 const YouTube = require('simple-youtube-api')
 var schedule = require('node-schedule')
 var Twit = require('twit')
+var createIsCool = require('iscool')
+var isCool = createIsCool()
 
 const youtube = new YouTube(process.env.YOUTUBE_API_KEY)
 
@@ -19,11 +21,11 @@ var T = new Twit({
 
 let doc = new GoogleSpreadsheet('14qlEWwnIoq1aFup3gJqgju1CKMUr35h-3tH_GxcYSzU')
 
-let ytRegExp = /(parapara|eurobeat|techpara|trapara|trance|テクパラ|パラパラ|ユーロ|テクノ|ユーロビート|トラパラ|トランス)/gi
+let ytRegExp = /(paralist|parapara|eurobeat|techpara|techno|trapara|trance|パラパラ|ユーロ|ユーロビート|テクパラ|テクノ|トラパラ|トランス)/gi
 
 console.log('Starting ParaPara News')
 
-function validateVideo (title, description) {
+function validate (title, description) {
   return (ytRegExp.test(title) || ytRegExp.test(description))
 }
 
@@ -75,7 +77,7 @@ function checkActivity (channelId) {
                   channelid: video.channel.id
                 }
                 if (new Date(video.publishedAt) > lastYear) {
-                  if (validateVideo(video.title, video.description)) {
+                  if (validate(video.title, video.description)) {
                     active = true
                   }
                 }
@@ -147,14 +149,22 @@ function getNewVideosFromChannel (channelId) {
             // get latest 2 videos of the channel
             playlist.getVideos(1, { part: 'snippet' }).then(video => {
               // resolve with video info if there is any
+              console.log()
               if (new Date(video[0].publishedAt) >= yesterday) {
-                if (validateVideo(video[0].title, video[0].description)) {
-                  let videoInfo = {
-                    videoId: video[0].id,
-                    videoTitle: video[0].title,
-                    channelName: video[0].channel.title
-                  }
-                  resolve(videoInfo)
+                if (validate(video[0].title, video[0].description)) {
+                  // check if the video was already tweeted - in that case we ignore it, because it would be already retweeted by the bot
+                  notTweetedVideo(video[0].id).then(valid => {
+                    if (valid) {
+                      let videoInfo = {
+                        videoId: video[0].id,
+                        videoTitle: video[0].title,
+                        channelName: video[0].channel.title
+                      }
+                      resolve(videoInfo)
+                    } else {
+                      resolve(false)
+                    }
+                  }).catch(err => console.log(err))
                 } else {
                   resolve(false)
                 }
@@ -213,7 +223,7 @@ function getRandomVideo (channelId) {
 
 // returns a valid video
 function selectVideo (videos, randomNumber) {
-  if (validateVideo(videos[randomNumber].title, videos[randomNumber].description)) {
+  if (validate(videos[randomNumber].title, videos[randomNumber].description)) {
     return videos[randomNumber]
   } else {
     videos.splice(randomNumber, 1)
@@ -237,10 +247,10 @@ function tweetMsg (msg) {
   })
 }
 
-function tweetRandomVideo () {
+function tweetRandomVideo (msg = '') {
   return getRandomChannel().then(channelId => {
     return getRandomVideo(channelId).then(videoInfo => {
-      tweetMsg(`It's time for a random video! This one is from ${videoInfo.channelName}!\n\n${videoInfo.videoTitle}\n\nhttps://youtu.be/${videoInfo.videoId}\n\n#parapara #パラパラ`)
+      tweetMsg(`${msg}It's time for a random video! This one is from ${videoInfo.channelName}!\n\n${videoInfo.videoTitle}\n\nhttps://youtu.be/${videoInfo.videoId}\n\n#parapara #パラパラ`)
     }).catch(err => console.log(err))
   }).catch(err => console.log(err))
 }
@@ -249,7 +259,7 @@ function tweetNewVideos () {
   getAllNewVideos().then(videos => {
     if (videos.length === 0) {
       console.log('tweet random')
-      tweetRandomVideo()
+      tweetRandomVideo('We coldn\'t find new videos, so...\n\n')
     } else if (videos.length === 1) {
       console.log('tweeting one video')
       tweetMsg(`This is a video posted on the last 24h from ${videos[0].channelName}!\n\n${videos[0].videoTitle}\n\nhttps://youtu.be/${videos[0].videoId}\n\n#parapara #パラパラ`)
@@ -266,6 +276,73 @@ function tweetNewVideos () {
   }).catch(err => console.log(err))
 }
 
+// User ignorelist
+let userIgnoreList = /(breakin_bot)/gi
+
+// test if user is in the ignorelist
+function isValidUser (user) {
+  return !userIgnoreList.test(user)
+}
+
+function notRetweet (txt) {
+  return !/^(RT)/.test(txt)
+}
+
+// get all parapara tweets with youtube links in the last 2 days
+function getRecentValidTweets () {
+  return new Promise(function (resolve, reject) {
+    T.get('search/tweets', { q: `parapara,youtu.be since:${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate() - 2}`, count: 100 }, function (err, data, response) {
+      if (err) {
+        reject(new Error(err))
+      } else {
+        let validTweets = []
+        data.statuses.forEach(tweet => {
+          if (isValidUser(tweet.user.screen_name)) {
+            // validate tweet
+            if (validate(tweet.text) && notRetweet(tweet.text) && isCool(tweet.text)) {
+              validTweets.push(tweet)
+            }
+          }
+        })
+        // return all valid tweets
+        resolve(validTweets)
+      }
+    })
+  })
+}
+
+// check the tweets
+function notTweetedVideo (id) {
+  return getRecentValidTweets().then(tweets => {
+    tweets.forEach(tweet => {
+      let regexpId = new RegExp(`${id}`, 'gi')
+      if (regexpId.test(tweet.text)) {
+        // return false if the id was found
+        return false
+      }
+    })
+    // return true if id was not found in any tweet
+    return true
+  }).catch(err => console.log(err))
+}
+
+function retweetVideoFromTweet (tweet) {
+  // check if user is not on ignore list
+  if (isValidUser(tweet.user.screen_name)) {
+    // validate tweet
+    if (validate(tweet.text) && notRetweet(tweet.text) && isCool(tweet.text)) {
+      // retweet
+      T.post('statuses/retweet/:id', { id: tweet.id_str }, function (err, data, response) {
+        if (err) {
+          console.log(err)
+        } else {
+          console.log('retweeted!')
+        }
+      })
+    }
+  }
+}
+
 // tweet a random video every day at 9pm
 schedule.scheduleJob('0 21 * * *', tweetRandomVideo)
 
@@ -273,4 +350,8 @@ schedule.scheduleJob('0 0 1 * *', setActiveChannels)
 
 schedule.scheduleJob('0 08 * * *', tweetNewVideos)
 
-// TODO: retweet every tweet that has parapara and youtu.be, but ignoring users with 'parapara' - maybe check if it is cool before retweeting (?)
+// filter for tweets with parapara and youtube links
+var stream = T.stream('statuses/filter', { track: 'parapara,youtu.be' })
+
+// retweets parapara videos posted on twitter
+stream.on('tweet', retweetVideoFromTweet(tweet))
