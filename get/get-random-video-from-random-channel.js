@@ -1,17 +1,22 @@
 var getSpreadsheet = require('./get-spreadsheet')
 var youtube = require('../config/youtube')
 var validate = require('../check/validate')
+var getKeywords = require('./get-keywords')
 
 // returns a random channel from the spreadsheet
 function getRandomChannel () {
   return getSpreadsheet(0).then(rows => {
     let randomNumber = getRandomNumber(rows.length)
-    return Promise.resolve(rows[randomNumber].channelid)
+    let info = {
+      channelId: rows[randomNumber].channelid,
+      twitterAccount: rows[randomNumber].twitteraccount
+    }
+    return Promise.resolve(info)
   }).catch(err => console.log(err))
 }
 
 // returns a random video id and title
-function getRandomVideo (channelId) {
+function getRandomVideo (channelId, twitterAccount) {
   return new Promise(function (resolve, reject) {
     youtube.getChannelByID(channelId, { part: 'contentDetails' }).then(channel => {
       if (channel) {
@@ -21,10 +26,13 @@ function getRandomVideo (channelId) {
             // get all videos of the channel
             playlist.getVideos(undefined, { part: 'snippet' }).then(videos => {
               let selectedVideo = selectVideo(videos, getRandomNumber(videos.length))
+              let hashtags = getKeywords(selectedVideo.title, selectedVideo.description, selectedVideo.channel.title)
               let info = {
                 videoId: selectedVideo.id,
                 videoTitle: selectedVideo.title,
-                channelName: selectedVideo.channel.title
+                channelName: selectedVideo.channel.title,
+                twitterAccount: twitterAccount,
+                hashtags: hashtags
               }
               resolve(info)
             }).catch(error => reject(error))
@@ -55,8 +63,8 @@ function getRandomNumber (max) {
 }
 
 function getRandomVideoFromRandomChannel () {
-  return getRandomChannel().then(channelId => {
-    return getRandomVideo(channelId).then(videoInfo => {
+  return getRandomChannel().then(info => {
+    return getRandomVideo(info.channelId, info.twitterAccount).then(videoInfo => {
       return Promise.resolve(videoInfo)
     }).catch(err => console.log(err))
   }).catch(err => console.log(err))

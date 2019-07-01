@@ -5,8 +5,10 @@ var isCool = createIsCool()
 
 // get all parapara tweets with youtube links in the last 2 days
 function getRecentValidTweets () {
+  let day = new Date()
+  let daysBefore = 2
   return new Promise(function (resolve, reject) {
-    T.get('search/tweets', { q: `parapara,youtu.be since:${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate() - 2}`, count: 100 }, function (err, data, response) {
+    T.get('search/tweets', { q: `parapara,youtu.be since:${new Date(day.setDate(day.getDate() - daysBefore)).getFullYear()}-${new Date(day.setDate(day.getDate() - daysBefore)).getMonth() + 1}-${new Date(day.setDate(day.getDate() - daysBefore)).getDate()}`, count: 100 }, function (err, data, response) {
       if (err) {
         reject(new Error(err))
       } else {

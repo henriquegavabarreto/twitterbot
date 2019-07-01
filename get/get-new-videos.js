@@ -2,6 +2,7 @@ var getSpreadsheet = require('./get-spreadsheet')
 var youtube = require('../config/youtube')
 var validate = require('../check/validate')
 var notTweetedVideo = require('../check/not-tweeted-video')
+var getKeywords = require('./get-keywords')
 
 // log new videos in the last 24 hours
 function getNewVideos () {
@@ -47,10 +48,12 @@ function getNewVideosFromChannel (channelId) {
                   // check if the video was already tweeted - in that case we ignore it, because it would be already retweeted by the bot
                   notTweetedVideo(video[0].id).then(valid => {
                     if (valid) {
+                      let hashtags = getKeywords(video[0].title, video[0].description, video[0].channel.title)
                       let videoInfo = {
                         videoId: video[0].id,
                         videoTitle: video[0].title,
-                        channelName: video[0].channel.title
+                        channelName: video[0].channel.title,
+                        hashtags: hashtags
                       }
                       resolve(videoInfo)
                     } else {

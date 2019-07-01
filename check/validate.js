@@ -11,7 +11,7 @@ function notRetweet (txt) {
 }
 
 // User ignorelist
-let userIgnoreList = /(ParaParaNews|breakin_bot)/gi
+let userIgnoreList = /(ParaParaNews|breakin_bot|HeroMusicworld)/gi
 
 // test if user is in the ignorelist
 function isValidUser (user) {
