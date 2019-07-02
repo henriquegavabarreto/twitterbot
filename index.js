@@ -1,8 +1,6 @@
 var schedule = require('node-schedule')
 var T = require('./config/twit')
 
-var getSpreadsheet = require('./get/get-spreadsheet')
-
 var tweetRandomVideo = require('./tweet/tweet-random-video')
 var tweetNewVideos = require('./tweet/tweet-new-videos')
 var setActiveChannels = require('./set/set-active-channels')
@@ -20,12 +18,10 @@ schedule.scheduleJob('0 0 1 * *', () => setActiveChannels)
 schedule.scheduleJob('0 08 * * *', () => tweetNewVideos)
 
 // filter for tweets with parapara and youtube links
-var stream = T.stream('statuses/filter', { track: 'parapara,youtu.be' })
+var stream = T.stream('statuses/filter', { track: 'parapara,eurobeat' })
 
 // retweets parapara videos posted on twitter
 stream.on('tweet', tweet => retweetVideoFromTweetStream(tweet))
 
 // TODO: reply with a random video if someone follows the bot?
-// add twitter tag to known channels and tag them if we post their video at random
 // reply in english or japanese depending on the user region?
-// all getVideo functions should pass down the description to get keywords to use on twitter (parapara, techpara and others)

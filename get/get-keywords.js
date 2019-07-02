@@ -1,6 +1,6 @@
 // validate text with parapara terms
 function getKeywords (title, description, channelName) {
-  let keywords = ['eurobeat', 'techpara', 'techno', 'trapara', 'trance', 'star *fire', 'supereuronight', 'hi-cross', 'ユーロ', 'ユーロビート', 'テクパラ', 'テクノ', 'トラパラ', 'トランス', '講習会']
+  let keywords = ['eurobeat', 'techpara', 'techno', 'trapara', 'trance', 'star *fire', 'super *euro *night', 'hi-cross', 'ユーロ', 'ユーロビート', 'テクパラ', 'テクノ', 'トラパラ', 'トランス', '講習会']
   let hashtags = ['#parapara', '#パラパラ']
   keywords.forEach(keyword => {
     let regexp = new RegExp(`(${keyword})`, 'gi')

@@ -8,15 +8,15 @@ function getRecentValidTweets () {
   let day = new Date()
   let daysBefore = 2
   return new Promise(function (resolve, reject) {
-    T.get('search/tweets', { q: `parapara,youtu.be since:${new Date(day.setDate(day.getDate() - daysBefore)).getFullYear()}-${new Date(day.setDate(day.getDate() - daysBefore)).getMonth() + 1}-${new Date(day.setDate(day.getDate() - daysBefore)).getDate()}`, count: 100 }, function (err, data, response) {
+    T.get('search/tweets', { q: `parapara,eurobeat since:${new Date(day.setDate(day.getDate() - daysBefore)).getFullYear()}-${new Date(day.setDate(day.getDate() - daysBefore)).getMonth() + 1}-${new Date(day.setDate(day.getDate() - daysBefore)).getDate()}`, count: 100 }, function (err, data, response) {
       if (err) {
         reject(new Error(err))
       } else {
         let validTweets = []
         data.statuses.forEach(tweet => {
           if (validate.user(tweet.user.screen_name)) {
-            // validate tweet
-            if (validate.txt(tweet.text) && validate.tweet(tweet.text) && isCool(tweet.text)) {
+            // validate tweet text and see if it has a video
+            if (validate.txt(tweet.text) && validate.tweet(tweet.text) && isCool(tweet.text) && validate.hasYoutubeVideo(tweet.entities)) {
               validTweets.push(tweet)
             }
           }
@@ -33,10 +33,10 @@ function notTweetedVideo (id) {
   return getRecentValidTweets().then(tweets => {
     tweets.forEach(tweet => {
       let regexpId = new RegExp(`${id}`, 'gi')
-      if (regexpId.test(tweet.text)) {
-        // return false if the id was found
-        return false
-      }
+      // return false if the id was found
+      tweet.entities.urls.forEach(url => {
+        if (regexpId.test(url.expanded_url)) return false
+      })
     })
     // return true if id was not found in any tweet
     return true
