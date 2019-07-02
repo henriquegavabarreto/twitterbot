@@ -1,6 +1,6 @@
 var validate = require('../check/validate')
 var doc = require('../config/doc')
-const creds = require('../client_secret.json')
+const creds = require('../config/creds')
 var youtube = require('../config/youtube')
 const { promisify } = require('util')
 

@@ -18,10 +18,26 @@ schedule.scheduleJob('0 0 1 * *', () => setActiveChannels)
 schedule.scheduleJob('0 08 * * *', () => tweetNewVideos)
 
 // filter for tweets with parapara and youtube links
-var stream = T.stream('statuses/filter', { track: 'parapara,eurobeat' })
+var stream = T.stream('statuses/filter', { track: 'techpara,trapara,parapara eurobeat,テクパラ,トラパラ,ユーロビート パラパラ' })
 
 // retweets parapara videos posted on twitter
 stream.on('tweet', tweet => retweetVideoFromTweetStream(tweet))
 
-// TODO: reply with a random video if someone follows the bot?
+// reply with a random video if someone follows the bot?
 // reply in english or japanese depending on the user region?
+
+// // get example and test
+// T.get('search/tweets', { q: 'techpara OR trapara OR parapara -terrorcore url:youtu.be OR filter:native_video -filter:retweets', count: 100 }, function(err, data, response) {
+//   const fs = require('fs')
+//   var json = JSON.stringify(data, null, 2)
+//   fs.writeFileSync('tweet.json', json)
+//   console.log(data.statuses.length)
+//   console.log('----------------------------------------')
+//   data.statuses.forEach(tweet => {
+//     if(validate.txt(tweet.text) && validate.user(tweet.user.screen_name)) {
+//       console.log(tweet.text)
+//       console.log(tweet.user.screen_name)
+//       console.log('------------------------------------------')
+//     }
+//   })
+// })

@@ -19,11 +19,11 @@ function isValidUser (user) {
   return !userIgnoreList.test(user)
 }
 
-function hasYoutubeVideo (entities) {
+function hasYoutubeVideo (tweet) {
   let hasRelevantVideos = false
-  if (entities.urls) {
-    if (entities.urls.length > 0) {
-      entities.urls.forEach(url => {
+  if (tweet.entities.urls) {
+    if (tweet.entities.urls.length > 0) {
+      tweet.entities.urls.forEach(url => {
         if (/(youtu\.be)/.test(url.expanded_url)) hasRelevantVideos = true
       })
     }
@@ -31,11 +31,18 @@ function hasYoutubeVideo (entities) {
   return hasRelevantVideos
 }
 
-function hasMediaVideo (entities) {
+function hasMediaVideo (tweet) {
   let hasRelevantVideos = false
-  if (entities.media) {
-    if (entities.media.length > 0) {
-      entities.media.forEach(media => {
+  if (tweet.entities.media) {
+    if (tweet.entities.media.length > 0) {
+      tweet.entities.media.forEach(media => {
+        if (media.type === 'video') hasRelevantVideos = true
+      })
+    }
+  }
+  if (tweet.entities.extended_entities) {
+    if (tweet.extended_entities.media.length > 0) {
+      tweet.extended_entities.media.forEach(media => {
         if (media.type === 'video') hasRelevantVideos = true
       })
     }
@@ -43,8 +50,8 @@ function hasMediaVideo (entities) {
   return hasRelevantVideos
 }
 
-function hasVideo (entities) {
-  return (hasYoutubeVideo(entities) || hasMediaVideo(entities))
+function hasVideo (tweet) {
+  return (hasYoutubeVideo(tweet) || hasMediaVideo(tweet))
 }
 
 exports.txt = validateTxt

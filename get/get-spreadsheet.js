@@ -1,5 +1,5 @@
 var doc = require('../config/doc')
-const creds = require('../client_secret.json')
+const creds = require('../config/creds')
 const { promisify } = require('util')
 
 // returns a promise with the rows of the selected spreadsheet - 0 for all and 1 for active

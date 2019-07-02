@@ -8,7 +8,7 @@ function getRecentValidTweets () {
   let day = new Date()
   let daysBefore = 2
   return new Promise(function (resolve, reject) {
-    T.get('search/tweets', { q: `parapara,eurobeat since:${new Date(day.setDate(day.getDate() - daysBefore)).getFullYear()}-${new Date(day.setDate(day.getDate() - daysBefore)).getMonth() + 1}-${new Date(day.setDate(day.getDate() - daysBefore)).getDate()}`, count: 100 }, function (err, data, response) {
+    T.get('search/tweets', { q: `techpara OR trapara OR parapara -terrorcore url:youtu.be OR filter:native_video -filter:retweets since:${new Date(day.setDate(day.getDate() - daysBefore)).getFullYear()}-${new Date(day.setDate(day.getDate() - daysBefore)).getMonth() + 1}-${new Date(day.setDate(day.getDate() - daysBefore)).getDate()}`, count: 100 }, function (err, data, response) {
       if (err) {
         reject(new Error(err))
       } else {
@@ -16,7 +16,7 @@ function getRecentValidTweets () {
         data.statuses.forEach(tweet => {
           if (validate.user(tweet.user.screen_name)) {
             // validate tweet text and see if it has a video
-            if (validate.txt(tweet.text) && validate.tweet(tweet.text) && isCool(tweet.text) && validate.hasYoutubeVideo(tweet.entities)) {
+            if (validate.txt(tweet.text) && validate.tweet(tweet.text) && isCool(tweet.text) && validate.hasYoutubeVideo(tweet)) {
               validTweets.push(tweet)
             }
           }
