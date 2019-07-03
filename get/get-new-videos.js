@@ -25,6 +25,7 @@ function getNewVideos () {
       } else {
         // deal with having no videos
         console.log('No New Videos Today')
+        return Promise.resolve(newVideos)
       }
     }).catch(err => console.log(err))
   })
