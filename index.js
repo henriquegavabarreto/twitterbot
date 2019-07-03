@@ -12,10 +12,10 @@ console.log('Starting ParaPara News')
 schedule.scheduleJob('0 21 * * *', () => tweetRandomVideo(''))
 
 // check for active channels on the all list every first day of the month at midnight
-schedule.scheduleJob('0 0 1 * *', () => setActiveChannels)
+schedule.scheduleJob('0 0 1 * *', () => setActiveChannels())
 
 // start tweeting new videos everyday at 8am
-schedule.scheduleJob('0 08 * * *', () => tweetNewVideos)
+schedule.scheduleJob('15 08 * * *', () => tweetNewVideos())
 
 // filter for tweets with parapara and youtube links
 var stream = T.stream('statuses/filter', { track: 'techpara,trapara,parapara eurobeat,テクパラ,トラパラ,ユーロビート パラパラ' })
