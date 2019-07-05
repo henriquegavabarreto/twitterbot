@@ -11,7 +11,7 @@ function tweetNewVideos () {
       console.log('tweeting one video')
       tweetMsg(`This is a video posted on the last 24h from ${videos[0].channelName}!\n\n${videos[0].videoTitle}\n\nhttps://youtu.be/${videos[0].videoId}\n\n${videos[0].hashtags}`)
     } else {
-      let timeOut = 1000 * 60 * 60 * 12 / (videos.length - 1)
+      let timeOut = 1000 * 60 * 25
       console.log('tweeting ' + videos.length + ' videos')
       // post new videos in the next 12 hours
       videos.forEach((video, index) => {
