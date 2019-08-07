@@ -11,8 +11,8 @@ console.log('Starting ParaPara News')
 // tweet a random video every day at 9pm
 schedule.scheduleJob('0 21 * * *', () => tweetRandomVideo(''))
 
-// check for active channels on the all list every first day of the month at midnight
-schedule.scheduleJob('0 0 1 * *', () => setActiveChannels())
+// check for active channels on the all list every sunday at midnight
+schedule.scheduleJob('0 0 * * 0', () => setActiveChannels())
 
 // start tweeting new videos everyday at 8am
 schedule.scheduleJob('20 08 * * *', () => tweetNewVideos())

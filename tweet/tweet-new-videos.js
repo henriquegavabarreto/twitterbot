@@ -9,14 +9,14 @@ function tweetNewVideos () {
       tweetRandomVideo('We coldn\'t find new videos, so...\n\n')
     } else if (videos.length === 1) {
       console.log('tweeting one video')
-      tweetMsg(`This is a video posted in the last 24h on ${videos[0].channelName}!\n\n${videos[0].videoTitle}'s Channel!\n\nhttps://youtu.be/${videos[0].videoId}\n\n${videos[0].hashtags}`)
+      tweetMsg(`This is a video posted in the last 24h on ${videos[0].channelName}'s Channel!\n\n${videos[0].videoTitle}\n\nhttps://youtu.be/${videos[0].videoId}\n\n${videos[0].hashtags}`)
     } else {
       let timeOut = 1000 * 60 * 25
       console.log('tweeting ' + videos.length + ' videos')
       // post new videos in the next 12 hours
       videos.forEach((video, index) => {
         setTimeout(() => {
-          tweetMsg(`[${index + 1}/${videos.length}]\n\nThis one of the videos posted in the last 24h! This was published on ${video.channelName}'s Channel'!\n\n${video.videoTitle}\n\nhttps://youtu.be/${video.videoId}\n\n${video.hashtags}`)
+          tweetMsg(`[${index + 1}/${videos.length}]\n\nThis is one of the videos posted in the last 24h! This was published on ${video.channelName}'s Channel!\n\n${video.videoTitle}\n\nhttps://youtu.be/${video.videoId}\n\n${video.hashtags}`)
         }, index * timeOut)
       })
     }

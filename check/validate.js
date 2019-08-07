@@ -1,4 +1,4 @@
-let ytRegExp = /(paralist|parapara|eurobeat|techpara|techno|trapara|trance|パラパラ|ユーロ|ユーロビート|テクパラ|テクノ|トラパラ|トランス)/gi
+let ytRegExp = /(paralist|parapara|eurobeat|techpara|techno|trapara|trance|パラパラ|ユーロ|ユーロビート|テクパラ|テクノ|トラパラ|トランス|わたクラ)/gi
 let ignoreWords = /(terrorcore)/gi
 
 // validate text with parapara terms
