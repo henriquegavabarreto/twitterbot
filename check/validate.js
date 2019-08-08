@@ -6,11 +6,6 @@ function validateTxt (title, description) {
   return ((ytRegExp.test(title) || ytRegExp.test(description)) && (!ignoreWords.test(title) && !ignoreWords.test(description)))
 }
 
-// verify if the text is not a retweet
-function notRetweet (txt) {
-  return !/^(RT)/.test(txt)
-}
-
 // User ignorelist
 let userIgnoreList = /(ParaParaVideos|breakin_bot|HeroMusicworld)/gi
 
@@ -56,6 +51,5 @@ function hasVideo (tweet) {
 
 exports.txt = validateTxt
 exports.user = isValidUser
-exports.tweet = notRetweet
 exports.hasVideo = hasVideo
 exports.hasYoutubeVideo = hasYoutubeVideo

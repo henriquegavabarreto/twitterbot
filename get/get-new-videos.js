@@ -43,7 +43,6 @@ function getNewVideosFromChannel (channelId) {
             // get latest 2 videos of the channel
             playlist.getVideos(1, { part: 'snippet' }).then(video => {
               // resolve with video info if there is any
-              console.log()
               if (new Date(video[0].publishedAt) >= yesterday) {
                 if (validate.txt(video[0].title, video[0].description)) {
                   // check if the video was already tweeted - in that case we ignore it, because it would be already retweeted by the bot
