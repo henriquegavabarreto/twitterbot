@@ -7,7 +7,7 @@ function validateTxt (title, description) {
 }
 
 // User ignorelist
-let userIgnoreList = /(ParaParaVideos|breakin_bot|HeroMusicworld)/gi
+let userIgnoreList = /(breakin_bot|HeroMusicworld)/gi
 
 // test if user is in the ignorelist
 function isValidUser (user) {

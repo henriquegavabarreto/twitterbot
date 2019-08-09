@@ -4,8 +4,8 @@ var createIsCool = require('iscool')
 var isCool = createIsCool()
 
 function retweetVideoFromTweetStream (tweet) {
-  // check if user is not on ignore list
-  if (validate.user(tweet.user.screen_name)) {
+  // check if user is not on ignore list and ignore own tweets
+  if (validate.user(tweet.user.screen_name) && !/(ParaParaVideos)/gi.test(tweet.user.screen_name)) {
     // validate tweet and check for youtu.be link or media
     if (validate.txt(tweet.text) && validate.tweet(tweet.text) && isCool(tweet.text) && validate.hasVideo(tweet)) {
       // retweet
