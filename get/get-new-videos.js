@@ -42,30 +42,34 @@ function getNewVideosFromChannel (channelId) {
           if (playlist) {
             // get latest 2 videos of the channel
             playlist.getVideos(1, { part: 'snippet' }).then(video => {
-              // resolve with video info if there is any
-              if (new Date(video[0].publishedAt) >= yesterday) {
-                if (validate.txt(video[0].title, video[0].description)) {
-                  // check if the video was already tweeted - in that case we ignore it, because it would be already retweeted by the bot
-                  notTweetedVideo(video[0].id).then(valid => {
-                    if (valid) {
-                      let hashtags = getKeywords(video[0].title, video[0].description, video[0].channel.title)
-                      let videoInfo = {
-                        videoId: video[0].id,
-                        videoTitle: video[0].title,
-                        channelName: video[0].channel.title,
-                        hashtags: hashtags
+              if (video) {
+                // resolve with video info if there is any
+                if (new Date(video[0].publishedAt) >= yesterday) {
+                  if (validate.txt(video[0].title, video[0].description)) {
+                    // check if the video was already tweeted - in that case we ignore it, because it would be already retweeted by the bot
+                    notTweetedVideo(video[0].id).then(valid => {
+                      if (valid) {
+                        let hashtags = getKeywords(video[0].title, video[0].description, video[0].channel.title)
+                        let videoInfo = {
+                          videoId: video[0].id,
+                          videoTitle: video[0].title,
+                          channelName: video[0].channel.title,
+                          hashtags: hashtags
+                        }
+                        resolve(videoInfo)
+                      } else {
+                        resolve(false)
                       }
-                      resolve(videoInfo)
-                    } else {
-                      resolve(false)
-                    }
-                  }).catch(err => console.log(err))
+                    }).catch(err => console.log(err))
+                  } else {
+                    resolve(false)
+                  }
                 } else {
+                  // resolve with false
                   resolve(false)
                 }
               } else {
-                // resolve with false
-                resolve(false)
+                reject(new Error('No video found'))
               }
             }).catch(error => reject(error))
           } else {

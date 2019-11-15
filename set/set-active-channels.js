@@ -21,6 +21,7 @@ function setActiveChannels () {
           promisify(allChannels.getRows)({ offset: 1 }).then(rows => {
             rows.forEach(row => {
               checkActivity(row.channelid).then(channelInfo => {
+                if (!channelInfo) return
                 console.log(`Adding ${channelInfo.channelname} to the list`)
                 // add channel to the document if active
                 promisify(activeChannels.addRow)(channelInfo)
@@ -60,7 +61,8 @@ function checkActivity (channelId) {
               if (active) {
                 resolve(channelInfo)
               } else {
-                reject(new Error(`${channelInfo.channelname} has no relevant videos for more than year`))
+                console.log(`${channelInfo.channelname} has no relevant videos for more than a year`)
+                resolve(false)
               }
             }).catch(error => reject(error))
           } else {
@@ -70,7 +72,10 @@ function checkActivity (channelId) {
       } else {
         reject(new Error('Channel not found'))
       }
-    }).catch(error => reject(error))
+    }).catch(error => {
+      console.log('GetChannelByIdError')
+      reject(error)
+    })
   })
 }
 
