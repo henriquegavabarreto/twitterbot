@@ -16,7 +16,7 @@ function getRecentValidTweets () {
         data.statuses.forEach(tweet => {
           if (validate.user(tweet.user.screen_name)) {
             // validate tweet text and see if it has a video
-            if (validate.txt(tweet.text) && validate.txt(tweet.text) && isCool(tweet.text) && validate.hasYoutubeVideo(tweet)) {
+            if (validate.txt(tweet.text) && isCool(tweet.text) && validate.hasYoutubeVideo(tweet)) {
               validTweets.push(tweet)
             }
           }
